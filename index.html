@@ -1,4 +1,140 @@
-silvioalbqrq/XML/
-├── index.html
-├── styles.css
-└── app.js
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal DF-e | Consulta e Download de XML NF-e</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Sidebar / Navegação Lateral -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-file-invoice-dollar brand-icon"></i>
+            <h2>Portal DF-e</h2>
+        </div>
+        <nav class="menu">
+            <a href="#" class="menu-item active"><i class="fa-solid fa-magnifying-glass"></i> Consultar NF-e</a>
+            <a href="#configuracoes" class="menu-item"><i class="fa-solid fa-key"></i> Certificado A1</a>
+            <a href="#historico" class="menu-item"><i class="fa-solid fa-clock-history"></i> Histórico</a>
+            <a href="#doc" class="menu-item"><i class="fa-solid fa-code"></i> API & Documentação</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="status-badge online">
+                <span class="dot"></span> SEFAZ CE: Operacional
+            </div>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        
+        <!-- Header Superior -->
+        <header class="top-header">
+            <div class="header-title">
+                <h1>Consulta de NF-e via Web Service</h1>
+                <p>Integração Opção 2 — Distribuição de DF-e com Certificado Digital A1</p>
+            </div>
+            <div class="user-profile">
+                <i class="fa-solid fa-building-columns"></i>
+                <span>SEFAZ / Ceará (23)</span>
+            </div>
+        </header>
+
+        <!-- Formulário de Consulta -->
+        <section class="card container-consulta">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-barcode"></i> Consulta por Chave de Acesso</h3>
+                <span class="badge info">Sem Manifestação Obrigatória*</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="chaveAcesso">Chave de Acesso da Nota Fiscal (44 dígitos):</label>
+                <div class="input-with-button">
+                    <input type="text" id="chaveAcesso" placeholder="Ex: 23260700000000000000550010000000011000000000" maxlength="44" autocomplete="off">
+                    <button id="btnConsultar" onclick="executarConsulta()">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Consultar e Baixar
+                    </button>
+                </div>
+                <small class="help-text">Insira a chave sem espaços ou caracteres especiais.</small>
+            </div>
+
+            <!-- Alerta Informativo -->
+            <div class="alert alert-info">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>Regra da SEFAZ (Opção 2):</strong> Sem a Manifestação prévia, o Web Service oficial retorna o <em>Resumo da NF-e (resNFe)</em>. Para obter o XML completo com itens, é necessário possuir a autorização do CNPJ destinatário/autXML.
+                </div>
+            </div>
+        </section>
+
+        <!-- Painel de Resultados (Oculto inicialmente) -->
+        <section id="resultadoContainer" class="card container-resultado hidden">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-file-code"></i> Resultado da Consulta</h3>
+                <div class="actions">
+                    <button class="btn-secondary" onclick="baixarXmlSimulado()"><i class="fa-solid fa-download"></i> Baixar Arquivo .XML</button>
+                </div>
+            </div>
+
+            <div class="grid-details">
+                <div class="detail-item">
+                    <span class="label">Status SEFAZ:</span>
+                    <span class="value success" id="resStatus">138 - Documento Localizado</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Tipo de Retorno:</span>
+                    <span class="value" id="resTipo">Resumo da NF-e (resNFe)</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">CNPJ Emitente:</span>
+                    <span class="value" id="resCnpj">12.345.678/0001-95</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Valor Total:</span>
+                    <span class="value" id="resValor">R$ 1.450,00</span>
+                </div>
+            </div>
+
+            <div class="xml-preview">
+                <div class="xml-preview-header">Visualização do Envelope XML (Retorno SEFAZ)</div>
+                <pre><code id="xmlCode"></code></pre>
+            </div>
+        </section>
+
+        <!-- Documentação da Integração Backend -->
+        <section id="doc" class="card container-doc">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-server"></i> Estrutura do Backend (Node.js + SOAP mTLS)</h3>
+            </div>
+            <p>Para conectar diretamente ao servidor da SEFAZ em produção, este projeto utiliza o endpoint oficial <code>NFeDistribuicaoDFe</code>. Exemplo de chamada no servidor:</p>
+            
+            <div class="code-block">
+                <pre><code>// Exemplo de integração mTLS com o Web Service da SEFAZ Ceará
+const axios = require('axios');
+const https = require('https');
+
+const httpsAgent = new https.Agent({
+    pfx: fs.readFileSync('./certificado.pfx'),
+    passphrase: 'senha_do_certificado'
+});
+
+// Envio para o Web Service Nacional de Distribuição de DF-e
+const response = await axios.post(
+    'https://www1.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx',
+    xmlEnvelopeSoap,
+    { httpsAgent, headers: { 'Content-Type': 'application/soap+xml' } }
+);</code></pre>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
