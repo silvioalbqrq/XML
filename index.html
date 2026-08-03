@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal DF-e | XML Completo com Itens</title>
+    <title>Portal DF-e | Download de XML Real com Certificado A1</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Sidebar / Navegação Lateral -->
     <aside class="sidebar">
         <div class="brand">
-            <i class="fa-solid fa-file-code brand-icon"></i>
+            <i class="fa-solid fa-shield-halved brand-icon"></i>
             <h2>Portal DF-e</h2>
         </div>
         <nav class="menu">
-            <a href="#" class="menu-item active"><i class="fa-solid fa-magnifying-glass"></i> Consultar XML Completo</a>
-            <a href="#doc" class="menu-item"><i class="fa-solid fa-code"></i> Documentação API</a>
+            <a href="#" class="menu-item active"><i class="fa-solid fa-key"></i> Download com Certificado A1</a>
+            <a href="#doc" class="menu-item"><i class="fa-solid fa-server"></i> API Backend</a>
         </nav>
         <div class="sidebar-footer">
             <div class="status-badge online">
-                <span class="dot"></span> SEFAZ CE: Operacional
+                <span class="dot"></span> SEFAZ CE (UF 23)
             </div>
             <div class="repo-info">
                 <i class="fa-brands fa-github"></i> silvioalbqrq/XML
@@ -30,116 +29,62 @@
         </div>
     </aside>
 
-    <!-- Conteúdo Principal -->
     <main class="main-content">
         
         <header class="top-header">
             <div class="header-title">
-                <h1>Download de XML Completo da NF-e (com Itens)</h1>
-                <p>Integração com Manifestação do Destinatário (Ciência da Emissão - Evento 210210)</p>
-            </div>
-            <div class="user-profile">
-                <i class="fa-solid fa-building-flag"></i>
-                <span>SEFAZ / Ceará (UF 23)</span>
+                <h1>Download de XML Completo da NF-e (mTLS Real)</h1>
+                <p>Processamento direto via Web Service com Certificado A1 (.pfx) e Ciência da Emissão</p>
             </div>
         </header>
 
-        <!-- Formulário de Consulta -->
         <section class="card container-consulta">
             <div class="card-header">
-                <h3><i class="fa-solid fa-barcode"></i> Obter XML Autorizado com Detalhamento de Produtos</h3>
-                <span class="badge success">Esquema procNFe Completo</span>
+                <h3><i class="fa-solid fa-file-invoice-dollar"></i> Dados da Consulta e Autenticação</h3>
+                <span class="badge success">Segurança mTLS</span>
             </div>
             
-            <div class="form-group">
-                <label for="chaveAcesso">Chave de Acesso da Nota Fiscal (44 dígitos):</label>
-                <div class="input-with-button">
-                    <input type="text" id="chaveAcesso" placeholder="Ex: 23260700000000000000550010000000011000000000" maxlength="44" autocomplete="off">
-                    <button id="btnConsultar" onclick="executarConsultaCompleta()">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> Gerar Ciência e Baixar XML
-                    </button>
+            <form id="formConsulta" onsubmit="enviarParaBackend(event)">
+                <div class="form-group">
+                    <label for="chaveAcesso">Chave de Acesso (44 dígitos):</label>
+                    <input type="text" id="chaveAcesso" placeholder="Ex: 23260700000000000000550010000000011000000000" maxlength="44" required>
                 </div>
-                <small class="help-text">Ao consultar, o sistema registra a Ciência da Emissão para liberar o XML com produtos e impostos.</small>
-            </div>
 
-            <!-- Alerta Informativo da Regra da SEFAZ -->
-            <div class="alert alert-success">
-                <i class="fa-solid fa-circle-check"></i>
-                <div>
-                    <strong>Regra do Web Service SEFAZ:</strong> Para que a SEFAZ retorne a tag <code>&lt;procNFe&gt;</code> contendo todos os produtos (<code>&lt;det&gt;</code>), NCM, valores e tributos, é obrigatório registrar a autorização/ciência do CNPJ destinatário ou constar na tag <code>autXML</code>.
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="arquivoPfx">Certificado Digital A1 (.pfx):</label>
+                        <input type="file" id="arquivoPfx" accept=".pfx,.p12" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="senhaPfx">Senha do Certificado:</label>
+                        <input type="password" id="senhaPfx" placeholder="••••••••" required>
+                    </div>
                 </div>
-            </div>
+
+                <div class="form-group">
+                    <label for="urlApiBackend">URL do Servidor Backend (API):</label>
+                    <input type="text" id="urlApiBackend" value="http://localhost:3000/api/baixar-xml-real" placeholder="http://localhost:3000/api/baixar-xml-real">
+                    <small class="help-text">Insira a URL onde a sua API Node.js está rodando (ex: Render, Railway ou localhost).</small>
+                </div>
+
+                <button type="submit" id="btnConsultar">
+                    <i class="fa-solid fa-lock"></i> Autenticar na SEFAZ e Baixar XML
+                </button>
+            </form>
         </section>
 
-        <!-- Painel de Resultados -->
+        <!-- Painel de Exibição do XML Retornado -->
         <section id="resultadoContainer" class="card container-resultado hidden">
             <div class="card-header">
-                <h3><i class="fa-solid fa-file-xml"></i> XML Completo Processado (procNFe)</h3>
-                <div class="actions">
-                    <button class="btn-secondary" onclick="baixarXmlCompleto()"><i class="fa-solid fa-download"></i> Salvar Arquivo .XML</button>
-                </div>
-            </div>
-
-            <div class="grid-details">
-                <div class="detail-item">
-                    <span class="label">Status SEFAZ:</span>
-                    <span class="value success" id="resStatus">138 - Documento Localizado (procNFe)</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Manifestação Registrada:</span>
-                    <span class="value success" id="resManifestacao">210210 - Ciência da Emissão</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Itens na Nota:</span>
-                    <span class="value" id="resItens">Detalhamento Completo (&lt;det nItem="1"&gt;)</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Valor Total:</span>
-                    <span class="value" id="resValor">R$ 1.450,00</span>
-                </div>
+                <h3><i class="fa-solid fa-file-code"></i> Retorno do XML Completo (procNFe)</h3>
+                <button class="btn-secondary" onclick="salvarXmlLocal()"><i class="fa-solid fa-download"></i> Salvar Arquivo .XML</button>
             </div>
 
             <div class="xml-preview">
-                <div class="xml-preview-header">Estrutura do XML Completo (Com Lista de Produtos e Tributação)</div>
+                <div class="xml-preview-header">Estrutura Assinada Retornada da SEFAZ</div>
                 <pre><code id="xmlCode"></code></pre>
             </div>
         </section>
-
-        <!-- Documentação Técnica da Manifestação e Download -->
-        <section id="doc" class="card container-doc">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-code"></i> Fluxo de Código em Node.js (Ciência + Download)</h3>
-            </div>
-            <p>Em ambiente de produção, o processo exige 2 passos SOAP encadeados com o Certificado Digital A1 do CNPJ Destinatário:</p>
-            
-            <div class="code-block">
-                <pre><code>// 1. Enviar Evento de Ciência da Emissão (210210) para autorizar
-const xmlEventoCiencia = `&lt;envEvento versao="1.00" xmlns="http://www.portalfiscal.inf.br/nfe"&gt;
-  &lt;idLote&gt;1&lt;/idLote&gt;
-  &lt;evento versao="1.00"&gt;
-    &lt;infEvento Id="ID210210${chaveAcesso}01"&gt;
-      &lt;cOrgao&gt;91&lt;/cOrgao&gt;
-      &lt;tpAmb&gt;1&lt;/tpAmb&gt;
-      &lt;CNPJ&gt;${cnpjDestinatario}&lt;/CNPJ&gt;
-      &lt;chNFe&gt;${chaveAcesso}&lt;/chNFe&gt;
-      &lt;dhEvento&gt;2026-08-03T09:00:00-03:00&lt;/dhEvento&gt;
-      &lt;tpEvento&gt;210210&lt;/tpEvento&gt;
-      &lt;nSeqEvento&gt;1&lt;/nSeqEvento&gt;
-      &lt;detEvento versao="1.00"&gt;
-        &lt;descEvento&gt;Ciencia da Emissao&lt;/descEvento&gt;
-      &lt;/detEvento&gt;
-    &lt;/infEvento&gt;
-  &lt;/evento&gt;
-&lt;/envEvento&gt;`;
-
-// 2. Chamar o NFeDistribuicaoDFe para baixar o procNFe Completo com os itens
-const response = await axios.post(urlSefaz, xmlEnvelopeSoap, { httpsAgent });</code></pre>
-            </div>
-        </section>
-
-        <footer class="main-footer">
-            <p>Hospedado via GitHub Pages: <a href="https://silvioalbqrq.github.io/XML/" target="_blank">https://silvioalbqrq.github.io/XML/</a></p>
-        </footer>
 
     </main>
 
